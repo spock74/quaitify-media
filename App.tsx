@@ -12,7 +12,9 @@ const App: React.FC = () => {
   // CONFIGURATION
   const animationVariant: AnimationVariant = 'knot'; 
   const MAX_FILE_SIZE_MB = 500; // Security: Limit client-side upload size
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+  // FIX: Acesso seguro ao import.meta.env para evitar crash em ambientes sem injeção do Vite
+  // Fixed type error by casting import.meta to any
+  const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api/v1';
 
   // Navigation State
   const [view, setView] = useState<'landing' | 'converter'>('landing');
