@@ -20,10 +20,25 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
-    // Configuration
-    // Increased particle count for knot to create a more solid density
-    const particleCount = variant === 'knot' ? 2600 : 600;
-    const baseScale = Math.min(width, height) * (variant === 'knot' ? 0.22 : 0.35);
+    // ==================================================================================
+    // 🔧 ANIMATION CONTROLS (PARAMETROS AJUSTAVEIS)
+    // ==================================================================================
+
+    // [CAMERA / ZOOM] 
+    // Controla o tamanho do objeto em relação à tela.
+    // Aumente para aproximar (zoom in), diminua para afastar.
+    // Valor sugerido Knot: 0.22, Sphere: 0.35
+    const CAMERA_ZOOM = variant === 'knot' ? 0.22 : 0.35;
+
+    // [DENSIDADE DE PARTICULAS]
+    // Controla quantas partículas formam o objeto.
+    // Aumente para deixar mais "sólido/denso", diminua para ficar mais disperso.
+    // Valor sugerido Knot: 2600, Sphere: 600
+    const PARTICLE_DENSITY = variant === 'knot' ? 2600 : 600;
+
+    // ==================================================================================
+
+    const baseScale = Math.min(width, height) * CAMERA_ZOOM;
     const rotationSpeed = 0.002;
 
     interface Point {
@@ -38,9 +53,9 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
 
     if (variant === 'sphere') {
       // Original Sphere Logic
-      for (let i = 0; i < particleCount; i++) {
+      for (let i = 0; i < PARTICLE_DENSITY; i++) {
         const theta = Math.acos(2 * Math.random() - 1);
-        const phi = Math.sqrt(particleCount * Math.PI) * theta;
+        const phi = Math.sqrt(PARTICLE_DENSITY * Math.PI) * theta;
 
         points.push({
           x: baseScale * Math.sin(theta) * Math.cos(phi),
@@ -56,7 +71,7 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
       // Decreased radius significantly (0.6 -> 0.25) to condense the shape into a "solid" tube
       const tubeRadius = 0.25; 
       
-      for (let i = 0; i < particleCount; i++) {
+      for (let i = 0; i < PARTICLE_DENSITY; i++) {
         // t represents the angle along the curve
         const t = Math.random() * Math.PI * 2 * p * q; 
         
@@ -104,11 +119,6 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
 
       const cx = width / 2;
       const cy = height / 2;
-
-      // Sort points by Z for proper occlusion (painters algorithm basic)
-      // For simple particles, just drawing is often enough, but sorting helps depth
-      // We calculate transformed Z first? For performance, we skip sorting in JS 
-      // and rely on alpha blending unless it looks bad.
 
       points.forEach(point => {
         let x = point.x;
