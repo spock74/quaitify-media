@@ -96,7 +96,7 @@ const App: React.FC = () => {
     }
 
     // Audio
-    if (options.removeAudio) {
+    if (options.audioCodec === AudioCodecType.NONE) {
       parts.push('-an');
     } else {
       parts.push('-c:a', options.audioCodec);
@@ -154,10 +154,10 @@ const App: React.FC = () => {
           filename: uploadData.filename,
           container: options.container,
           video_codec: options.videoCodec,
-          audio_codec: options.audioCodec,
+          audio_codec: options.audioCodec === AudioCodecType.NONE ? 'aac' : options.audioCodec, // Fallback if backend requires string, but remove_audio handles logic
           preset: options.preset,
           crf: options.crf,
-          remove_audio: options.removeAudio,
+          remove_audio: options.audioCodec === AudioCodecType.NONE,
           scale: options.scale !== 'original' ? options.scale : null,
           fps: options.fps !== 'original' ? options.fps : null
         })
@@ -538,27 +538,13 @@ const App: React.FC = () => {
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.audioCodec}
-                          disabled={options.removeAudio}
                           onChange={(e) => setOptions({...options, audioCodec: e.target.value as AudioCodecType})}
                         >
                           <option value={AudioCodecType.AAC}>AAC</option>
                           <option value={AudioCodecType.MP3}>MP3</option>
                           <option value={AudioCodecType.COPY}>Copiar Original</option>
+                          <option value={AudioCodecType.NONE}>Nenhum (Remover Áudio)</option>
                         </select>
-                      </div>
-
-                      {/* Toggles */}
-                      <div className="space-y-2 flex flex-col justify-end">
-                         <label className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors">
-                            <input 
-                              type="checkbox" 
-                              className="w-4 h-4 text-white rounded border-gray-600 focus:ring-white bg-transparent"
-                              checked={options.removeAudio}
-                              onChange={(e) => setOptions({...options, removeAudio: e.target.checked})}
-                            />
-                            <span className="text-sm">Remover Faixa de Áudio</span>
-                            <InfoTooltip text={TOOLTIPS.removeAudio} />
-                         </label>
                       </div>
 
                     </div>

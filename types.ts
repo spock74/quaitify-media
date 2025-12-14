@@ -43,5 +43,4 @@ export interface ConversionOptions {
   crf: number; // 0-51 quality
   scale: string; // e.g. "1920:-1" or "original"
   fps: string; // e.g. "30", "60" or "original"
-  removeAudio: boolean;
 }
