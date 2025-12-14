@@ -1,13 +1,13 @@
 import { CodecType, AudioCodecType, PresetType } from './types';
 
 export const TOOLTIPS = {
-  container: "The file extension/container format for the output (e.g., .mp4, .mkv, .mov).",
-  videoCodec: "The encoder used to compress the video stream. H.264 is widely compatible; H.265 offers better compression but needs newer hardware.",
-  audioCodec: "The encoder for the audio stream. AAC is standard for MP4. 'Copy' preserves original audio without re-encoding.",
-  preset: "Trade-off between encoding speed and compression efficiency. 'Slow' produces smaller files but takes longer. 'Ultrafast' is quick but larger file size.",
-  crf: "Constant Rate Factor. Lower values mean better quality but larger files. 18-28 is the sane range. 23 is default.",
-  scale: "Resize the video. 'Original' keeps dimensions. '1080p' scales height to 1080 pixels while maintaining aspect ratio.",
-  removeAudio: "Completely strips the audio track from the file."
+  container: "A extensão do arquivo/formato do contêiner para a saída (ex: .mp4, .mkv, .mov).",
+  videoCodec: "O codificador usado para comprimir o fluxo de vídeo. H.264 é amplamente compatível; H.265 oferece melhor compressão mas requer hardware mais recente.",
+  audioCodec: "O codificador para o fluxo de áudio. AAC é padrão para MP4. 'Copiar' preserva o áudio original sem recodificação.",
+  preset: "Compromisso entre velocidade de codificação e eficiência de compressão. 'Slow' produz arquivos menores mas demora mais. 'Ultrafast' é rápido mas gera arquivos maiores.",
+  crf: "Fator de Taxa Constante (Constant Rate Factor). Valores menores significam melhor qualidade mas arquivos maiores. 18-28 é a faixa recomendada. 23 é o padrão.",
+  scale: "Redimensionar o vídeo. 'Original' mantém as dimensões. '1080p' dimensiona a altura para 1080 pixels mantendo a proporção.",
+  removeAudio: "Remove completamente a faixa de áudio do arquivo."
 };
 
 export const INITIAL_OPTIONS = {

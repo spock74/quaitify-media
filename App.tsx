@@ -47,8 +47,14 @@ const App: React.FC = () => {
   const generateScript = () => {
     if (!file) return;
 
+    // Sanitize filename: replace spaces and non-ascii characters with underscore
+    const originalNameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
+    const sanitizedBaseName = originalNameNoExt
+      .replace(/\s+/g, '_') // Replace spaces
+      .replace(/[^\x00-\x7F]/g, '_'); // Replace non-ASCII
+
     const input = `"${file.name}"`;
-    const outputName = file.name.substring(0, file.name.lastIndexOf('.')) + `_converted.${options.container}`;
+    const outputName = `${sanitizedBaseName}_converted.${options.container}`;
     const output = `"${outputName}"`;
 
     const parts = ['ffmpeg', '-i', input];
@@ -196,7 +202,7 @@ const App: React.FC = () => {
                 className="group relative px-10 py-4 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)]"
               >
                 <span className="relative z-10">
-                  Quantify File
+                  Quantificar Arquivo
                 </span>
               </button>
             </motion.div>
@@ -222,22 +228,22 @@ const App: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       className="bg-surface rounded-xl p-6 border border-gray-800"
                     >
-                      <h3 className="text-gray-400 text-xs font-mono uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">Analysis</h3>
+                      <h3 className="text-gray-400 text-xs font-mono uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">Análise</h3>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-gray-500 text-sm">Filename</span>
+                          <span className="text-gray-500 text-sm">Nome do Arquivo</span>
                           <span className="text-gray-200 text-sm font-medium truncate max-w-[200px]">{metadata.name}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500 text-sm">Size</span>
+                          <span className="text-gray-500 text-sm">Tamanho</span>
                           <span className="text-gray-200 text-sm font-mono">{formatSize(metadata.size)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500 text-sm">Type</span>
+                          <span className="text-gray-500 text-sm">Tipo</span>
                           <span className="text-gray-200 text-sm">{metadata.type}</span>
                         </div>
                         <div className="flex justify-between">
-                           <span className="text-gray-500 text-sm">Extension</span>
+                           <span className="text-gray-500 text-sm">Extensão</span>
                            <span className="text-accent text-sm font-mono uppercase">.{metadata.extension}</span>
                         </div>
                       </div>
@@ -247,23 +253,24 @@ const App: React.FC = () => {
 
                 {/* RIGHT COLUMN: Configuration */}
                 <div className="lg:col-span-7 space-y-6">
-                  <div className="bg-surface rounded-xl border border-gray-800 p-6 md:p-8 relative overflow-hidden">
+                  {/* Removing overflow-hidden to allow tooltips to show */}
+                  <div className="bg-surface rounded-xl border border-gray-800 p-6 md:p-8 relative">
                     {!file && (
-                      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center">
-                        <p className="text-gray-500 font-mono text-sm">Import a file to configure options</p>
+                      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl">
+                        <p className="text-gray-500 font-mono text-sm">Importe um arquivo para configurar as opções</p>
                       </div>
                     )}
                     
                     <div className="flex items-center gap-3 mb-8">
                       <Settings className="text-white" size={24} />
-                      <h2 className="text-xl font-semibold">Conversion Matrix</h2>
+                      <h2 className="text-xl font-semibold">Matriz de Conversão</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       
                       {/* Container */}
                       <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Target Format <InfoTooltip text={TOOLTIPS.container} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Formato de Destino <InfoTooltip text={TOOLTIPS.container} /></label>
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none transition-all"
                           value={options.container}
@@ -271,15 +278,15 @@ const App: React.FC = () => {
                         >
                           <option value="mp4">MP4 (Universal)</option>
                           <option value="mov">MOV (macOS)</option>
-                          <option value="mkv">MKV (Modern)</option>
+                          <option value="mkv">MKV (Moderno)</option>
                           <option value="webm">WebM (Web)</option>
-                          <option value="mp3">MP3 (Audio Only)</option>
+                          <option value="mp3">MP3 (Apenas Áudio)</option>
                         </select>
                       </div>
 
                       {/* Video Codec */}
                       <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Video Codec <InfoTooltip text={TOOLTIPS.videoCodec} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Codec de Vídeo <InfoTooltip text={TOOLTIPS.videoCodec} /></label>
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.videoCodec}
@@ -289,30 +296,30 @@ const App: React.FC = () => {
                           <option value={CodecType.H265}>H.265 (HEVC)</option>
                           <option value={CodecType.PRORES}>ProRes</option>
                           <option value={CodecType.VP9}>VP9</option>
-                          <option value={CodecType.COPY}>Copy (No Re-encode)</option>
+                          <option value={CodecType.COPY}>Copiar (Sem Recodificação)</option>
                         </select>
                       </div>
 
                        {/* Preset */}
                        <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Encoding Speed <InfoTooltip text={TOOLTIPS.preset} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Velocidade de Codificação <InfoTooltip text={TOOLTIPS.preset} /></label>
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.preset}
                           onChange={(e) => setOptions({...options, preset: e.target.value as PresetType})}
                         >
-                          <option value={PresetType.ULTRAFAST}>Ultrafast (Low Quality)</option>
-                          <option value={PresetType.FAST}>Fast</option>
-                          <option value={PresetType.MEDIUM}>Medium (Balanced)</option>
-                          <option value={PresetType.SLOW}>Slow (High Quality)</option>
-                          <option value={PresetType.VERYSLOW}>Very Slow (Best Size)</option>
+                          <option value={PresetType.ULTRAFAST}>Ultrafast (Baixa Qualidade)</option>
+                          <option value={PresetType.FAST}>Fast (Rápido)</option>
+                          <option value={PresetType.MEDIUM}>Medium (Balanceado)</option>
+                          <option value={PresetType.SLOW}>Slow (Alta Qualidade)</option>
+                          <option value={PresetType.VERYSLOW}>Very Slow (Melhor Tamanho)</option>
                         </select>
                       </div>
 
                        {/* CRF */}
                        <div className="space-y-2">
                         <label className="text-xs text-gray-500 font-mono uppercase flex justify-between">
-                          <span>Quality (CRF) <InfoTooltip text={TOOLTIPS.crf} /></span>
+                          <span>Qualidade (CRF) <InfoTooltip text={TOOLTIPS.crf} /></span>
                           <span className="text-accent">{options.crf}</span>
                         </label>
                         <input 
@@ -327,7 +334,7 @@ const App: React.FC = () => {
 
                        {/* Audio Codec */}
                        <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Audio Codec <InfoTooltip text={TOOLTIPS.audioCodec} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Codec de Áudio <InfoTooltip text={TOOLTIPS.audioCodec} /></label>
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.audioCodec}
@@ -336,7 +343,7 @@ const App: React.FC = () => {
                         >
                           <option value={AudioCodecType.AAC}>AAC</option>
                           <option value={AudioCodecType.MP3}>MP3</option>
-                          <option value={AudioCodecType.COPY}>Copy Original</option>
+                          <option value={AudioCodecType.COPY}>Copiar Original</option>
                         </select>
                       </div>
 
@@ -349,7 +356,7 @@ const App: React.FC = () => {
                               checked={options.removeAudio}
                               onChange={(e) => setOptions({...options, removeAudio: e.target.checked})}
                             />
-                            <span className="text-sm">Remove Audio Track</span>
+                            <span className="text-sm">Remover Faixa de Áudio</span>
                             <InfoTooltip text={TOOLTIPS.removeAudio} />
                          </label>
                       </div>
@@ -363,7 +370,7 @@ const App: React.FC = () => {
                         className="bg-white hover:bg-gray-200 text-black font-bold py-3 px-8 rounded-lg shadow-lg active:transform active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                          <FileCode size={20} />
-                         Generate Command
+                         Gerar Comando
                       </button>
                     </div>
                   </div>
@@ -394,7 +401,7 @@ const App: React.FC = () => {
                 <div className="p-4 bg-[#252525] border-b border-gray-700 flex justify-between items-center">
                    <div className="flex items-center gap-3">
                       <Terminal size={18} className="text-gray-400" />
-                      <span className="font-mono text-sm font-medium">Terminal Command</span>
+                      <span className="font-mono text-sm font-medium">Comando do Terminal</span>
                    </div>
                    <button onClick={() => setShowScript(false)} className="text-gray-500 hover:text-white">&times;</button>
                 </div>
@@ -403,8 +410,8 @@ const App: React.FC = () => {
                    <div className="flex items-start gap-3 mb-6 p-4 bg-blue-900/20 border border-blue-900/50 rounded-lg">
                       <AlertCircle className="text-blue-400 shrink-0 mt-0.5" size={18} />
                       <div className="text-sm text-blue-200">
-                        <p className="mb-2"><strong>Quantify Wrapper Mode:</strong></p>
-                        <p>Direct browser conversion is limited. Copy the command below and paste it into your Terminal to execute the conversion with full system performance.</p>
+                        <p className="mb-2"><strong>Modo Wrapper Quantizer:</strong></p>
+                        <p>A conversão direta no navegador é limitada. Copie o comando abaixo e cole-o no seu Terminal para executar a conversão com desempenho total do sistema.</p>
                       </div>
                    </div>
 

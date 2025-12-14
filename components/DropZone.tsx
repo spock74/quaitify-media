@@ -59,13 +59,13 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected }) => {
         </div>
         <div>
           <h3 className="text-lg font-medium text-white mb-1">
-            Drag & Drop File
+            Arraste e Solte o Arquivo
           </h3>
           <p className="text-sm text-gray-500 mb-4">
-            or <label htmlFor="file-upload" className="text-accent hover:text-cyan-300 cursor-pointer font-medium hover:underline">browse files</label> on your Mac
+            ou <label htmlFor="file-upload" className="text-accent hover:text-cyan-300 cursor-pointer font-medium hover:underline">navegue pelos arquivos</label> no seu Mac
           </p>
           <p className="text-xs text-gray-600">
-            Supports .MOV, .MP4, .MKV, .AVI & more
+            Suporta .MOV, .MP4, .MKV, .AVI e mais
           </p>
         </div>
       </div>
