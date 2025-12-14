@@ -1,0 +1,5 @@
+{
+  "name": "Quantify - FFmpeg GUI",
+  "description": "A high-performance visual wrapper for FFmpeg on macOS. Convert video and images with a professional CLI generator.",
+  "requestFramePermissions": []
+}
