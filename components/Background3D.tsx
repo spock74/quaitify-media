@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
-const Background3D: React.FC = () => {
+export type AnimationVariant = 'sphere' | 'knot';
+
+interface Background3DProps {
+  variant?: AnimationVariant;
+}
+
+const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -15,27 +21,71 @@ const Background3D: React.FC = () => {
     let height = window.innerHeight;
 
     // Configuration
-    const particleCount = 600;
-    const sphereRadius = Math.min(width, height) * 0.35;
+    const particleCount = variant === 'knot' ? 1400 : 600;
+    const baseScale = Math.min(width, height) * (variant === 'knot' ? 0.18 : 0.35);
     const rotationSpeed = 0.002;
 
     interface Point {
       x: number;
       y: number;
       z: number;
+      baseColor?: string; // Used for knot gradient
     }
 
-    // Generate points on a sphere
+    // Generate points based on variant
     const points: Point[] = [];
-    for (let i = 0; i < particleCount; i++) {
-      const theta = Math.acos(2 * Math.random() - 1);
-      const phi = Math.sqrt(particleCount * Math.PI) * theta;
 
-      points.push({
-        x: sphereRadius * Math.sin(theta) * Math.cos(phi),
-        y: sphereRadius * Math.sin(theta) * Math.sin(phi),
-        z: sphereRadius * Math.cos(theta),
-      });
+    if (variant === 'sphere') {
+      // Original Sphere Logic
+      for (let i = 0; i < particleCount; i++) {
+        const theta = Math.acos(2 * Math.random() - 1);
+        const phi = Math.sqrt(particleCount * Math.PI) * theta;
+
+        points.push({
+          x: baseScale * Math.sin(theta) * Math.cos(phi),
+          y: baseScale * Math.sin(theta) * Math.sin(phi),
+          z: baseScale * Math.cos(theta),
+        });
+      }
+    } else {
+      // Torus Knot Logic (Trefoil-ish)
+      // Parametric equation for a (p,q) torus knot
+      const p = 2;
+      const q = 3; 
+      const tubeRadius = 0.6; // Thickness of the cloud around the curve
+      
+      for (let i = 0; i < particleCount; i++) {
+        // t represents the angle along the curve
+        const t = Math.random() * Math.PI * 2 * p * q; 
+        
+        // Curve definition
+        const r = 2 + Math.cos(q * t);
+        const cx = r * Math.cos(p * t);
+        const cy = r * Math.sin(p * t);
+        const cz = -Math.sin(q * t);
+
+        // Add volume (random fuzz around the point)
+        // Simple spherical noise around the curve point
+        const noiseTheta = Math.random() * Math.PI * 2;
+        const noisePhi = Math.random() * Math.PI;
+        const noiseR = Math.random() * tubeRadius;
+        
+        const nx = noiseR * Math.sin(noisePhi) * Math.cos(noiseTheta);
+        const ny = noiseR * Math.sin(noisePhi) * Math.sin(noiseTheta);
+        const nz = noiseR * Math.cos(noisePhi);
+
+        // Assign color based on position along the curve (t)
+        // Normalize t to 0-1 range for hue
+        const normalizedT = (t % (Math.PI * 2)) / (Math.PI * 2);
+        const hue = normalizedT * 360;
+        
+        points.push({
+          x: (cx + nx) * baseScale,
+          y: (cy + ny) * baseScale,
+          z: (cz + nz) * baseScale,
+          baseColor: `hsla(${hue}, 80%, 60%,` 
+        });
+      }
     }
 
     let angleX = 0;
@@ -48,14 +98,17 @@ const Background3D: React.FC = () => {
 
       // Rotate
       angleX += rotationSpeed;
-      angleY += rotationSpeed * 0.6;
+      angleY += rotationSpeed * 0.8;
 
       const cx = width / 2;
       const cy = height / 2;
 
-      // Draw points
+      // Sort points by Z for proper occlusion (painters algorithm basic)
+      // For simple particles, just drawing is often enough, but sorting helps depth
+      // We calculate transformed Z first? For performance, we skip sorting in JS 
+      // and rely on alpha blending unless it looks bad.
+
       points.forEach(point => {
-        // Rotation Matrix logic simplified
         let x = point.x;
         let y = point.y;
         let z = point.z;
@@ -77,24 +130,30 @@ const Background3D: React.FC = () => {
         z = z2;
 
         // Perspective projection
-        const scale = 400 / (400 + z);
+        const fov = 400;
+        const scale = fov / (fov + z);
         const x2D = x * scale + cx;
         const y2D = y * scale + cy;
 
         // Draw particle
-        // Alpha depends on Z (depth)
-        const alpha = (z + sphereRadius) / (2 * sphereRadius); 
-        const size = Math.max(0.5, scale * 2.5);
+        const alpha = (z + baseScale * 2) / (3 * baseScale); 
+        const size = Math.max(0.5, scale * (variant === 'knot' ? 2 : 2.5));
 
         ctx.beginPath();
         ctx.arc(x2D, y2D, size, 0, Math.PI * 2);
         
-        // Gradient color based on depth
-        const r = 6 + (alpha * 50); // minimal red
-        const g = 182 + (alpha * 50); // cyan/teal range
-        const b = 212;
+        if (variant === 'knot' && point.baseColor) {
+           // Use pre-calculated hue, modify alpha based on depth
+           const cleanAlpha = Math.max(0.1, Math.min(1, 0.3 + alpha * 0.7));
+           ctx.fillStyle = `${point.baseColor} ${cleanAlpha})`;
+        } else {
+           // Default Sphere Colors (Cyan/Teal)
+           const r = 6 + (alpha * 50); 
+           const g = 182 + (alpha * 50); 
+           const b = 212;
+           ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.3 + alpha * 0.7})`;
+        }
         
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.3 + alpha * 0.7})`;
         ctx.fill();
       });
 
@@ -106,17 +165,18 @@ const Background3D: React.FC = () => {
       height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
+      // Re-run render to clear immediately
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Init size
+    handleResize();
     render();
 
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [variant]);
 
   return (
     <canvas 

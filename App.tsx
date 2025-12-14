@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileCode, Settings, Terminal, CheckCircle2, Copy, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
-import Background3D from './components/Background3D';
+import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle } from 'lucide-react';
+import Background3D, { AnimationVariant } from './components/Background3D';
 import DropZone from './components/DropZone';
 import InfoTooltip from './components/InfoTooltip';
 import { FileMetadata, ConversionOptions, CodecType, AudioCodecType, PresetType } from './types';
 import { TOOLTIPS, INITIAL_OPTIONS } from './constants';
 
 const App: React.FC = () => {
+  // CONFIGURATION: Developer can switch between 'sphere' and 'knot' here
+  const animationVariant: AnimationVariant = 'knot'; 
+
   // Navigation State
   const [view, setView] = useState<'landing' | 'converter'>('landing');
   const [showScript, setShowScript] = useState(false);
@@ -73,7 +76,6 @@ const App: React.FC = () => {
 
     // Strict standard for certain codecs
     if (options.audioCodec === AudioCodecType.AAC) {
-       // Often needed for wide compatibility
        parts.push('-movflags', '+faststart');
     }
 
@@ -106,7 +108,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden">
+    <div className="min-h-screen bg-background text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden flex flex-col">
       
       {/* Landing View Background - Only visible on landing */}
       <AnimatePresence>
@@ -118,15 +120,46 @@ const App: React.FC = () => {
             transition={{ duration: 1 }}
             className="absolute inset-0 z-0"
           >
-            <Background3D />
+            <Background3D variant={animationVariant} />
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* LANDING PAGE HEADER - Only on landing */}
+      <AnimatePresence>
+        {view === 'landing' && (
+          <motion.nav 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative z-20 w-full p-8 flex justify-between items-center max-w-7xl mx-auto"
+          >
+            {/* Left Spacer / Invisible Logo to balance layout if needed, or just empty */}
+            <div className="w-24"></div>
+
+            {/* Center Links */}
+            <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide">
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">Ajuda</a>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">Blog</a>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">Contato</a>
+            </div>
+
+            {/* Right Button */}
+            <div className="w-24 flex justify-end">
+              <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
+                Entrar
+              </button>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+
+
       {/* Main Content Container */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 flex-1 flex flex-col">
         
-        {/* Navigation / Header (only on converter view) */}
+        {/* Converter Header */}
         {view === 'converter' && (
           <motion.header 
             initial={{ y: -50, opacity: 0 }}
@@ -134,46 +167,42 @@ const App: React.FC = () => {
             className="w-full p-6 border-b border-gray-800 bg-background/80 backdrop-blur-md flex justify-between items-center"
           >
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setView('landing'); resetApp(); }}>
-              <div className="w-8 h-8 rounded bg-gradient-to-tr from-primary to-accent flex items-center justify-center">
-                 <RefreshCw size={18} className="text-white" />
+              <div className="w-8 h-8 rounded bg-white text-black flex items-center justify-center">
+                 <RefreshCw size={18} />
               </div>
-              <span className="font-bold text-xl tracking-tight">Quantify</span>
+              <span className="font-bold text-xl tracking-tight text-white">Quantizer</span>
             </div>
           </motion.header>
         )}
 
         <AnimatePresence mode="wait">
           
-          {/* LANDING PAGE */}
+          {/* LANDING PAGE CONTENT */}
           {view === 'landing' && (
             <motion.div 
               key="landing"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, filter: 'blur(10px)' }}
+              exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
               transition={{ duration: 0.8 }}
-              className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+              className="flex-1 flex flex-col items-center justify-center p-8 text-center mt-[-80px]" // Negative margin to center vertically accounting for header
             >
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-br from-white via-gray-200 to-gray-500">
-                Quantify Media.
+              <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-white mb-10 drop-shadow-2xl">
+                Quantizer
               </h1>
-              <p className="text-gray-400 max-w-md text-lg mb-12 leading-relaxed">
-                Professional visualization and transformation for your assets.
-                Transform <span className="text-accent">.mov</span> to <span className="text-accent">.mp4</span> and more with precision.
-              </p>
               
               <button
                 onClick={() => setView('converter')}
-                className="group relative px-8 py-4 bg-white text-black font-semibold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]"
+                className="group relative px-10 py-4 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)]"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  Quantify Assets <ArrowLeft className="rotate-180 transition-transform group-hover:translate-x-1" size={20} />
+                <span className="relative z-10">
+                  Quantify File
                 </span>
               </button>
             </motion.div>
           )}
 
-          {/* CONVERTER PAGE */}
+          {/* CONVERTER PAGE CONTENT */}
           {view === 'converter' && (
             <motion.div
               key="converter"
@@ -226,7 +255,7 @@ const App: React.FC = () => {
                     )}
                     
                     <div className="flex items-center gap-3 mb-8">
-                      <Settings className="text-accent" size={24} />
+                      <Settings className="text-white" size={24} />
                       <h2 className="text-xl font-semibold">Conversion Matrix</h2>
                     </div>
 
@@ -236,7 +265,7 @@ const App: React.FC = () => {
                       <div className="space-y-2">
                         <label className="text-xs text-gray-500 font-mono uppercase">Target Format <InfoTooltip text={TOOLTIPS.container} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none transition-all"
                           value={options.container}
                           onChange={(e) => setOptions({...options, container: e.target.value})}
                         >
@@ -252,7 +281,7 @@ const App: React.FC = () => {
                       <div className="space-y-2">
                         <label className="text-xs text-gray-500 font-mono uppercase">Video Codec <InfoTooltip text={TOOLTIPS.videoCodec} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.videoCodec}
                           onChange={(e) => setOptions({...options, videoCodec: e.target.value as CodecType})}
                         >
@@ -268,7 +297,7 @@ const App: React.FC = () => {
                        <div className="space-y-2">
                         <label className="text-xs text-gray-500 font-mono uppercase">Encoding Speed <InfoTooltip text={TOOLTIPS.preset} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.preset}
                           onChange={(e) => setOptions({...options, preset: e.target.value as PresetType})}
                         >
@@ -290,7 +319,7 @@ const App: React.FC = () => {
                           type="range" 
                           min="0" 
                           max="51" 
-                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent"
+                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-white"
                           value={options.crf}
                           onChange={(e) => setOptions({...options, crf: parseInt(e.target.value)})}
                         />
@@ -300,7 +329,7 @@ const App: React.FC = () => {
                        <div className="space-y-2">
                         <label className="text-xs text-gray-500 font-mono uppercase">Audio Codec <InfoTooltip text={TOOLTIPS.audioCodec} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.audioCodec}
                           disabled={options.removeAudio}
                           onChange={(e) => setOptions({...options, audioCodec: e.target.value as AudioCodecType})}
@@ -316,7 +345,7 @@ const App: React.FC = () => {
                          <label className="flex items-center gap-3 p-3 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors">
                             <input 
                               type="checkbox" 
-                              className="w-4 h-4 text-accent rounded border-gray-600 focus:ring-accent bg-transparent"
+                              className="w-4 h-4 text-white rounded border-gray-600 focus:ring-white bg-transparent"
                               checked={options.removeAudio}
                               onChange={(e) => setOptions({...options, removeAudio: e.target.checked})}
                             />
@@ -331,7 +360,7 @@ const App: React.FC = () => {
                       <button 
                         onClick={generateScript}
                         disabled={!file}
-                        className="bg-accent hover:bg-cyan-400 text-black font-bold py-3 px-8 rounded-lg shadow-lg shadow-cyan-900/20 active:transform active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="bg-white hover:bg-gray-200 text-black font-bold py-3 px-8 rounded-lg shadow-lg active:transform active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                          <FileCode size={20} />
                          Generate Command
