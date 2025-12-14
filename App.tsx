@@ -13,7 +13,6 @@ const App: React.FC = () => {
   const animationVariant: AnimationVariant = 'knot'; 
   const MAX_FILE_SIZE_MB = 500; // Security: Limit client-side upload size
   // FIX: Acesso seguro ao import.meta.env para evitar crash em ambientes sem injeção do Vite
-  // Fixed type error by casting import.meta to any
   const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api/v1';
 
   // Navigation State
@@ -255,16 +254,16 @@ const App: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative z-20 w-full p-8 flex justify-between items-center max-w-7xl mx-auto"
+            className="relative z-20 w-full p-6 md:p-8 flex justify-between items-center max-w-7xl mx-auto"
           >
-            <div className="w-24"></div>
+            <div className="w-12 md:w-24"></div>
             <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide">
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Ajuda</a>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Blog</a>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Contato</a>
             </div>
-            <div className="w-24 flex justify-end">
-              <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
+            <div className="w-12 md:w-24 flex justify-end">
+              <button className="bg-white text-black px-4 py-1.5 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-bold hover:bg-gray-200 transition-colors">
                 Entrar
               </button>
             </div>
@@ -273,14 +272,14 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Content Container */}
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto">
         
         {/* Converter Header */}
         {view === 'converter' && (
           <motion.header 
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full p-6 border-b border-gray-800 bg-background/80 backdrop-blur-md flex justify-between items-center"
+            className="w-full p-4 md:p-6 border-b border-gray-800 bg-background/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-40"
           >
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setView('landing'); resetApp(); }}>
               <div className="w-8 h-8 rounded bg-white text-black flex items-center justify-center">
@@ -301,14 +300,14 @@ const App: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
               transition={{ duration: 0.8 }}
-              className="flex-1 flex flex-col items-center justify-center p-8 text-center mt-[-80px]"
+              className="flex-1 flex flex-col items-center justify-center p-8 text-center mt-[-60px] md:mt-[-80px]"
             >
-              <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-white mb-10 drop-shadow-2xl">
+              <h1 className="text-5xl md:text-8xl font-bold tracking-tight text-white mb-8 md:mb-10 drop-shadow-2xl">
                 Quantizer
               </h1>
               <button
                 onClick={() => setView('converter')}
-                className="group relative px-10 py-4 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)]"
+                className="group relative px-8 py-3 md:px-10 md:py-4 bg-white text-black font-bold text-base md:text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)]"
               >
                 <span className="relative z-10">
                   Quantificar Arquivo
@@ -323,17 +322,18 @@ const App: React.FC = () => {
               key="converter"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex-1 container mx-auto max-w-5xl p-6 md:p-12"
+              // Ajuste de altura e centralização vertical: min-h para preencher a tela menos o header
+              className="flex-1 container mx-auto max-w-5xl p-4 md:p-8 flex flex-col justify-center min-h-[calc(100vh-80px)]"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full">
                 
                 {/* LEFT COLUMN: Input & Info */}
-                <div className="lg:col-span-5 space-y-6">
+                <div className="lg:col-span-5 space-y-4 md:space-y-6">
                   {conversionStatus === 'idle' ? (
                      <DropZone onFileSelected={handleFileSelect} />
                   ) : (
                     /* Active Conversion Status Card */
-                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-10 flex flex-col items-center justify-center text-center h-[300px] relative overflow-hidden">
+                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center h-[250px] md:h-[300px] relative overflow-hidden">
                         {conversionStatus === 'error' && (
                            <div className="space-y-4 animate-in fade-in zoom-in duration-300">
                              <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -374,7 +374,7 @@ const App: React.FC = () => {
                         
                         {(conversionStatus === 'uploading' || conversionStatus === 'converting' || conversionStatus === 'estimating') && (
                           <div className="w-full max-w-xs space-y-6">
-                            <div className="relative w-20 h-20 mx-auto">
+                            <div className="relative w-16 h-16 md:w-20 md:h-20 mx-auto">
                                <div className="absolute inset-0 border-4 border-gray-700 rounded-full"></div>
                                <div className="absolute inset-0 border-4 border-t-accent border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
                             </div>
@@ -382,7 +382,7 @@ const App: React.FC = () => {
                               <h3 className="font-medium text-lg mb-1">
                                 {conversionStatus === 'uploading' ? 'Enviando...' : 'Processando...'}
                               </h3>
-                              <p className="text-xs text-gray-500 font-mono">{file?.name}</p>
+                              <p className="text-xs text-gray-500 font-mono truncate max-w-[200px] mx-auto">{file?.name}</p>
                             </div>
                             <ProgressBar 
                               progress={progress} 
@@ -401,23 +401,23 @@ const App: React.FC = () => {
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="bg-surface rounded-xl p-6 border border-gray-800"
+                      className="bg-surface rounded-xl p-4 md:p-6 border border-gray-800"
                     >
                       <h3 className="text-gray-400 text-xs font-mono uppercase tracking-widest mb-4 border-b border-gray-800 pb-2">Análise</h3>
                       <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500 text-sm">Nome do Arquivo</span>
-                          <span className="text-gray-200 text-sm font-medium truncate max-w-[200px]">{metadata.name}</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500 text-sm">Nome</span>
+                          <span className="text-gray-200 text-sm font-medium truncate max-w-[150px] md:max-w-[200px]">{metadata.name}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-500 text-sm">Tamanho</span>
                           <span className="text-gray-200 text-sm font-mono">{formatSize(metadata.size)}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-500 text-sm">Tipo</span>
-                          <span className="text-gray-200 text-sm">{metadata.type}</span>
+                          <span className="text-gray-200 text-sm truncate max-w-[120px]">{metadata.type}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                            <span className="text-gray-500 text-sm">Extensão</span>
                            <span className="text-accent text-sm font-mono uppercase">.{metadata.extension}</span>
                         </div>
@@ -428,19 +428,19 @@ const App: React.FC = () => {
 
                 {/* RIGHT COLUMN: Configuration */}
                 <div className="lg:col-span-7 space-y-6">
-                  <div className={`bg-surface rounded-xl border border-gray-800 p-6 md:p-8 relative transition-opacity duration-300 ${conversionStatus !== 'idle' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                  <div className={`bg-surface rounded-xl border border-gray-800 p-5 md:p-8 relative transition-opacity duration-300 ${conversionStatus !== 'idle' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                     {!file && (
-                      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl">
+                      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl p-4 text-center">
                         <p className="text-gray-500 font-mono text-sm">Importe um arquivo para configurar as opções</p>
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-3 mb-8">
+                    <div className="flex items-center gap-3 mb-6 md:mb-8">
                       <Settings className="text-white" size={24} />
-                      <h2 className="text-xl font-semibold">Matriz de Conversão</h2>
+                      <h2 className="text-lg md:text-xl font-semibold">Matriz de Conversão</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                       
                       {/* Container */}
                       <div className="space-y-2">
@@ -489,7 +489,7 @@ const App: React.FC = () => {
 
                        {/* Preset */}
                        <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Velocidade de Codificação <InfoTooltip text={TOOLTIPS.preset} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Velocidade <InfoTooltip text={TOOLTIPS.preset} /></label>
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
                           value={options.preset}
@@ -522,7 +522,7 @@ const App: React.FC = () => {
                       {/* FPS Control */}
                       <div className="space-y-2">
                         <label className={`text-xs text-gray-500 font-mono uppercase flex justify-between items-center ${options.container === 'mp3' ? 'opacity-50' : ''}`}>
-                          <span className="flex items-center">FPS (Quadros) <InfoTooltip text={TOOLTIPS.fps} /></span>
+                          <span className="flex items-center">FPS <InfoTooltip text={TOOLTIPS.fps} /></span>
                         </label>
                         
                         <div className={`bg-background border border-gray-700 rounded-lg p-3 flex flex-col gap-3 ${options.container === 'mp3' ? 'opacity-30 pointer-events-none' : ''}`}>
@@ -533,7 +533,7 @@ const App: React.FC = () => {
                                 onChange={(e) => setOptions({...options, fps: e.target.checked ? 'original' : '30'})}
                                 className="w-4 h-4 text-accent rounded border-gray-600 focus:ring-accent bg-transparent"
                               />
-                              <span className="text-sm text-gray-300">Manter Original</span>
+                              <span className="text-sm text-gray-300">Original</span>
                            </label>
                            
                            {options.fps !== 'original' && (
@@ -551,7 +551,7 @@ const App: React.FC = () => {
                                   value={options.fps}
                                   onChange={(e) => setOptions({...options, fps: e.target.value})}
                                 />
-                                <span className="text-accent font-mono w-8 text-right">{options.fps}</span>
+                                <span className="text-accent font-mono w-8 text-right text-xs">{options.fps}</span>
                               </motion.div>
                            )}
                         </div>
@@ -569,19 +569,19 @@ const App: React.FC = () => {
                           <option value={AudioCodecType.MP3}>MP3</option>
                           <option value={AudioCodecType.COPY}>Copiar Original</option>
                           <option value={AudioCodecType.NONE} disabled={options.container === 'mp3'}>
-                             {options.container === 'mp3' ? 'Nenhum (Indisponível em MP3)' : 'Nenhum (Remover Áudio)'}
+                             {options.container === 'mp3' ? 'Nenhum' : 'Nenhum (Remover Áudio)'}
                           </option>
                         </select>
                       </div>
 
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-gray-800 flex justify-between gap-4">
+                    <div className="mt-8 pt-6 border-t border-gray-800 flex flex-col md:flex-row gap-4">
                       
                       <button 
                         onClick={generateScript}
                         disabled={!file}
-                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full"
                       >
                          <FileCode size={20} className="text-gray-400" />
                          <span>Gerar Script</span>
@@ -590,7 +590,7 @@ const App: React.FC = () => {
                       <button 
                         onClick={handleRealConversion}
                         disabled={!file}
-                        className="flex-[1.5] bg-white hover:bg-gray-200 text-black font-bold py-3 px-6 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 bg-white hover:bg-gray-200 text-black font-bold py-3 px-6 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full"
                       >
                          <HardDrive size={20} />
                          <span>Processar (API)</span>
@@ -620,9 +620,9 @@ const App: React.FC = () => {
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#1e1e1e] border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden"
+                className="bg-[#1e1e1e] border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
               > 
-                <div className="p-4 bg-[#252525] border-b border-gray-700 flex justify-between items-center">
+                <div className="p-4 bg-[#252525] border-b border-gray-700 flex justify-between items-center shrink-0">
                    <div className="flex items-center gap-3">
                       <Terminal size={18} className="text-gray-400" />
                       <span className="font-mono text-sm font-medium">Comando do Terminal</span>
@@ -630,7 +630,7 @@ const App: React.FC = () => {
                    <button onClick={() => setShowScript(false)} className="text-gray-500 hover:text-white">&times;</button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto">
                    <div className="flex items-start gap-3 mb-6 p-4 bg-blue-900/20 border border-blue-900/50 rounded-lg">
                       <AlertCircle className="text-blue-400 shrink-0 mt-0.5" size={18} />
                       <div className="text-sm text-blue-200">
