@@ -76,33 +76,45 @@ const App: React.FC = () => {
     
     const parts = ['ffmpeg', '-i', `"${file.name}"`];
 
-    // Video Codec
-    if (options.videoCodec !== CodecType.COPY) {
-       parts.push('-c:v', options.videoCodec);
-       parts.push('-preset', options.preset);
-       parts.push('-crf', options.crf.toString());
+    const isAudioOnlyContainer = options.container === 'mp3';
+
+    // Video Codec Configuration
+    if (isAudioOnlyContainer) {
+      // If container is MP3, we must strip video
+      parts.push('-vn');
     } else {
-       parts.push('-c:v', 'copy');
+      if (options.videoCodec !== CodecType.COPY) {
+         parts.push('-c:v', options.videoCodec);
+         parts.push('-preset', options.preset);
+         parts.push('-crf', options.crf.toString());
+      } else {
+         parts.push('-c:v', 'copy');
+      }
+
+      // Scaling
+      if (options.scale !== 'original') {
+        parts.push('-vf', `scale=${options.scale}`);
+      }
+
+      // FPS (Frame Rate)
+      if (options.fps !== 'original') {
+        parts.push('-r', options.fps);
+      }
     }
 
-    // Scaling
-    if (options.scale !== 'original') {
-      parts.push('-vf', `scale=${options.scale}`);
-    }
-
-    // FPS (Frame Rate)
-    if (options.fps !== 'original') {
-      parts.push('-r', options.fps);
-    }
-
-    // Audio
+    // Audio Configuration
     if (options.audioCodec === AudioCodecType.NONE) {
-      parts.push('-an');
+      if (isAudioOnlyContainer) {
+         // Fallback safety: Cannot have no audio in an audio-only container
+         parts.push('-c:a', 'libmp3lame'); 
+      } else {
+         parts.push('-an');
+      }
     } else {
       parts.push('-c:a', options.audioCodec);
     }
 
-    if (options.audioCodec === AudioCodecType.AAC) {
+    if (options.audioCodec === AudioCodecType.AAC && !isAudioOnlyContainer) {
        parts.push('-movflags', '+faststart');
     }
 
@@ -153,8 +165,8 @@ const App: React.FC = () => {
         body: JSON.stringify({
           filename: uploadData.filename,
           container: options.container,
-          video_codec: options.videoCodec,
-          audio_codec: options.audioCodec === AudioCodecType.NONE ? 'aac' : options.audioCodec, // Fallback if backend requires string, but remove_audio handles logic
+          video_codec: options.container === 'mp3' ? 'none' : options.videoCodec, // Backend logic support needed or handled by ffmpeg args
+          audio_codec: options.audioCodec === AudioCodecType.NONE ? 'aac' : options.audioCodec, 
           preset: options.preset,
           crf: options.crf,
           remove_audio: options.audioCodec === AudioCodecType.NONE,
@@ -436,7 +448,17 @@ const App: React.FC = () => {
                         <select 
                           className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none transition-all"
                           value={options.container}
-                          onChange={(e) => setOptions({...options, container: e.target.value})}
+                          onChange={(e) => {
+                            const newContainer = e.target.value;
+                            const updates: Partial<ConversionOptions> = { container: newContainer };
+                            
+                            // Prevent AudioCodec.NONE if switching to MP3
+                            if (newContainer === 'mp3' && options.audioCodec === AudioCodecType.NONE) {
+                              updates.audioCodec = AudioCodecType.MP3;
+                            }
+                            
+                            setOptions({...options, ...updates});
+                          }}
                         >
                           <option value="mp4">MP4 (Universal)</option>
                           <option value="mov">MOV (macOS)</option>
@@ -448,10 +470,13 @@ const App: React.FC = () => {
 
                       {/* Video Codec */}
                       <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Codec de Vídeo <InfoTooltip text={TOOLTIPS.videoCodec} /></label>
+                        <label className={`text-xs text-gray-500 font-mono uppercase ${options.container === 'mp3' ? 'opacity-50' : ''}`}>
+                           Codec de Vídeo <InfoTooltip text={TOOLTIPS.videoCodec} />
+                        </label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none disabled:opacity-30 disabled:cursor-not-allowed"
                           value={options.videoCodec}
+                          disabled={options.container === 'mp3'}
                           onChange={(e) => setOptions({...options, videoCodec: e.target.value as CodecType})}
                         >
                           <option value={CodecType.H264}>H.264 (AVC)</option>
@@ -496,11 +521,11 @@ const App: React.FC = () => {
 
                       {/* FPS Control */}
                       <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase flex justify-between items-center">
+                        <label className={`text-xs text-gray-500 font-mono uppercase flex justify-between items-center ${options.container === 'mp3' ? 'opacity-50' : ''}`}>
                           <span className="flex items-center">FPS (Quadros) <InfoTooltip text={TOOLTIPS.fps} /></span>
                         </label>
                         
-                        <div className="bg-background border border-gray-700 rounded-lg p-3 flex flex-col gap-3">
+                        <div className={`bg-background border border-gray-700 rounded-lg p-3 flex flex-col gap-3 ${options.container === 'mp3' ? 'opacity-30 pointer-events-none' : ''}`}>
                            <label className="flex items-center gap-2 cursor-pointer">
                               <input 
                                 type="checkbox"
@@ -543,7 +568,9 @@ const App: React.FC = () => {
                           <option value={AudioCodecType.AAC}>AAC</option>
                           <option value={AudioCodecType.MP3}>MP3</option>
                           <option value={AudioCodecType.COPY}>Copiar Original</option>
-                          <option value={AudioCodecType.NONE}>Nenhum (Remover Áudio)</option>
+                          <option value={AudioCodecType.NONE} disabled={options.container === 'mp3'}>
+                             {options.container === 'mp3' ? 'Nenhum (Indisponível em MP3)' : 'Nenhum (Remover Áudio)'}
+                          </option>
                         </select>
                       </div>
 
