@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle } from 'lucide-react';
+import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle, Play, Download, HardDrive } from 'lucide-react';
 import Background3D, { AnimationVariant } from './components/Background3D';
 import DropZone from './components/DropZone';
 import InfoTooltip from './components/InfoTooltip';
+import ProgressBar from './components/ProgressBar';
 import { FileMetadata, ConversionOptions, CodecType, AudioCodecType, PresetType } from './types';
 import { TOOLTIPS, INITIAL_OPTIONS } from './constants';
 
@@ -22,9 +23,20 @@ const App: React.FC = () => {
   const [generatedCommand, setGeneratedCommand] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // Conversion Workflow State
+  const [conversionStatus, setConversionStatus] = useState<'idle' | 'uploading' | 'estimating' | 'converting' | 'completed'>('idle');
+  const [progress, setProgress] = useState(0);
+  const [estimatedSize, setEstimatedSize] = useState<string | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
   // Logic to process file selection
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
+    setConversionStatus('idle');
+    setProgress(0);
+    setEstimatedSize(null);
+    setDownloadUrl(null);
+
     const ext = selectedFile.name.split('.').pop()?.toLowerCase() || '';
     
     setMetadata({
@@ -46,18 +58,10 @@ const App: React.FC = () => {
   // Logic to generate FFmpeg string
   const generateScript = () => {
     if (!file) return;
-
-    // Sanitize filename: replace spaces and non-ascii characters with underscore
-    const originalNameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
-    const sanitizedBaseName = originalNameNoExt
-      .replace(/\s+/g, '_') // Replace spaces
-      .replace(/[^\x00-\x7F]/g, '_'); // Replace non-ASCII
-
-    const input = `"${file.name}"`;
+    const sanitizedBaseName = getSanitizedName(file.name);
     const outputName = `${sanitizedBaseName}_converted.${options.container}`;
-    const output = `"${outputName}"`;
-
-    const parts = ['ffmpeg', '-i', input];
+    
+    const parts = ['ffmpeg', '-i', `"${file.name}"`];
 
     // Video Codec
     if (options.videoCodec !== CodecType.COPY) {
@@ -85,10 +89,49 @@ const App: React.FC = () => {
        parts.push('-movflags', '+faststart');
     }
 
-    parts.push(output);
+    parts.push(`"${outputName}"`);
 
     setGeneratedCommand(parts.join(' '));
     setShowScript(true);
+  };
+
+  const getSanitizedName = (fileName: string) => {
+    const originalNameNoExt = fileName.substring(0, fileName.lastIndexOf('.'));
+    return originalNameNoExt
+      .replace(/\s+/g, '_')
+      .replace(/[^\x00-\x7F]/g, '_');
+  };
+
+  // MOCK FUNCTION: Simulates the API Workflow described in the strategy
+  const handleRealConversion = async () => {
+    if (!file) return;
+    
+    // Step 1: Uploading (Simulation)
+    setConversionStatus('uploading');
+    setProgress(10);
+    await new Promise(r => setTimeout(r, 1000));
+    
+    // Step 2: Estimating (Simulation)
+    setConversionStatus('estimating');
+    setProgress(20);
+    await new Promise(r => setTimeout(r, 1500));
+    // Simulate size estimation logic (e.g. 40% of original size for H.264 CRF 23)
+    const estimatedBytes = file.size * 0.4; 
+    setEstimatedSize(formatSize(estimatedBytes));
+    
+    // Step 3: Converting (Simulation)
+    setConversionStatus('converting');
+    for (let i = 20; i <= 100; i += 5) {
+        setProgress(i);
+        // Simulate varying processing time
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    // Step 4: Completion
+    setConversionStatus('completed');
+    // In a real app, this URL would come from the backend (e.g., http://localhost:8000/download/xyz)
+    // Here we create a fake blob just to show the UX
+    setDownloadUrl('#'); 
   };
 
   const copyToClipboard = () => {
@@ -111,6 +154,8 @@ const App: React.FC = () => {
      setMetadata(null);
      setShowScript(false);
      setGeneratedCommand('');
+     setConversionStatus('idle');
+     setDownloadUrl(null);
   };
 
   return (
@@ -220,7 +265,54 @@ const App: React.FC = () => {
                 
                 {/* LEFT COLUMN: Input & Info */}
                 <div className="lg:col-span-5 space-y-6">
-                  <DropZone onFileSelected={handleFileSelect} />
+                  {conversionStatus === 'idle' ? (
+                     <DropZone onFileSelected={handleFileSelect} />
+                  ) : (
+                    /* Active Conversion Status Card */
+                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-10 flex flex-col items-center justify-center text-center h-[300px]">
+                        {conversionStatus === 'completed' ? (
+                          <div className="space-y-4 animate-in fade-in zoom-in duration-500">
+                             <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <CheckCircle2 size={32} />
+                             </div>
+                             <h3 className="text-xl font-bold text-white">Conversão Concluída!</h3>
+                             <p className="text-gray-400 text-sm">Seu arquivo foi otimizado com sucesso.</p>
+                             {downloadUrl && (
+                               <a 
+                                 href={downloadUrl}
+                                 className="inline-flex items-center gap-2 bg-accent hover:bg-cyan-400 text-black font-bold py-2 px-6 rounded-full mt-4 transition-colors"
+                                 onClick={(e) => { e.preventDefault(); alert("Em um ambiente com API real, o download iniciaria agora."); }}
+                               >
+                                 <Download size={18} />
+                                 Baixar Arquivo ({estimatedSize})
+                               </a>
+                             )}
+                          </div>
+                        ) : (
+                          <div className="w-full max-w-xs space-y-6">
+                            <div className="relative w-20 h-20 mx-auto">
+                               <div className="absolute inset-0 border-4 border-gray-700 rounded-full"></div>
+                               <div className="absolute inset-0 border-4 border-t-accent border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-lg mb-1">Processando...</h3>
+                              <p className="text-xs text-gray-500 font-mono">{file?.name}</p>
+                            </div>
+                            <ProgressBar 
+                              progress={progress} 
+                              status={
+                                conversionStatus === 'uploading' ? 'Enviando ao servidor...' :
+                                conversionStatus === 'estimating' ? 'Calculando tamanho...' :
+                                'Convertendo (FFmpeg)...'
+                              } 
+                            />
+                            {estimatedSize && (
+                               <p className="text-xs text-gray-400">Tamanho Estimado: <span className="text-white font-mono">{estimatedSize}</span></p>
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  )}
                   
                   {metadata && (
                     <motion.div 
@@ -254,7 +346,7 @@ const App: React.FC = () => {
                 {/* RIGHT COLUMN: Configuration */}
                 <div className="lg:col-span-7 space-y-6">
                   {/* Removing overflow-hidden to allow tooltips to show */}
-                  <div className="bg-surface rounded-xl border border-gray-800 p-6 md:p-8 relative">
+                  <div className={`bg-surface rounded-xl border border-gray-800 p-6 md:p-8 relative transition-opacity duration-300 ${conversionStatus !== 'idle' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                     {!file && (
                       <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl">
                         <p className="text-gray-500 font-mono text-sm">Importe um arquivo para configurar as opções</p>
@@ -363,15 +455,26 @@ const App: React.FC = () => {
 
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-gray-800 flex justify-end">
+                    <div className="mt-8 pt-6 border-t border-gray-800 flex justify-between gap-4">
+                      
                       <button 
                         onClick={generateScript}
                         disabled={!file}
-                        className="bg-white hover:bg-gray-200 text-black font-bold py-3 px-8 rounded-lg shadow-lg active:transform active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
-                         <FileCode size={20} />
-                         Gerar Comando
+                         <FileCode size={20} className="text-gray-400" />
+                         <span>Gerar Script</span>
                       </button>
+
+                      <button 
+                        onClick={handleRealConversion}
+                        disabled={!file}
+                        className="flex-[1.5] bg-white hover:bg-gray-200 text-black font-bold py-3 px-6 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                         <HardDrive size={20} />
+                         <span>Processar (API)</span>
+                      </button>
+
                     </div>
                   </div>
                 </div>
