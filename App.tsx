@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle, Play, Download, HardDrive } from 'lucide-react';
+import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle, Play, Download, HardDrive, AlertTriangle } from 'lucide-react';
 import Background3D, { AnimationVariant } from './components/Background3D';
 import DropZone from './components/DropZone';
 import InfoTooltip from './components/InfoTooltip';
@@ -9,8 +9,10 @@ import { FileMetadata, ConversionOptions, CodecType, AudioCodecType, PresetType 
 import { TOOLTIPS, INITIAL_OPTIONS } from './constants';
 
 const App: React.FC = () => {
-  // CONFIGURATION: Developer can switch between 'sphere' and 'knot' here
+  // CONFIGURATION
   const animationVariant: AnimationVariant = 'knot'; 
+  const MAX_FILE_SIZE_MB = 500; // Security: Limit client-side upload size
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
   // Navigation State
   const [view, setView] = useState<'landing' | 'converter'>('landing');
@@ -22,20 +24,29 @@ const App: React.FC = () => {
   const [options, setOptions] = useState<ConversionOptions>(INITIAL_OPTIONS);
   const [generatedCommand, setGeneratedCommand] = useState('');
   const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Conversion Workflow State
-  const [conversionStatus, setConversionStatus] = useState<'idle' | 'uploading' | 'estimating' | 'converting' | 'completed'>('idle');
+  const [conversionStatus, setConversionStatus] = useState<'idle' | 'uploading' | 'estimating' | 'converting' | 'completed' | 'error'>('idle');
   const [progress, setProgress] = useState(0);
   const [estimatedSize, setEstimatedSize] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   // Logic to process file selection
   const handleFileSelect = (selectedFile: File) => {
+    // Security Check: Size Limit
+    const sizeMB = selectedFile.size / (1024 * 1024);
+    if (sizeMB > MAX_FILE_SIZE_MB) {
+      alert(`Arquivo muito grande! O limite para a versão web é ${MAX_FILE_SIZE_MB}MB.`);
+      return;
+    }
+
     setFile(selectedFile);
     setConversionStatus('idle');
     setProgress(0);
     setEstimatedSize(null);
     setDownloadUrl(null);
+    setErrorMsg(null);
 
     const ext = selectedFile.name.split('.').pop()?.toLowerCase() || '';
     
@@ -84,7 +95,6 @@ const App: React.FC = () => {
       parts.push('-c:a', options.audioCodec);
     }
 
-    // Strict standard for certain codecs
     if (options.audioCodec === AudioCodecType.AAC) {
        parts.push('-movflags', '+faststart');
     }
@@ -102,36 +112,76 @@ const App: React.FC = () => {
       .replace(/[^\x00-\x7F]/g, '_');
   };
 
-  // MOCK FUNCTION: Simulates the API Workflow described in the strategy
+  // REAL API INTEGRATION
   const handleRealConversion = async () => {
     if (!file) return;
+    setErrorMsg(null);
     
-    // Step 1: Uploading (Simulation)
-    setConversionStatus('uploading');
-    setProgress(10);
-    await new Promise(r => setTimeout(r, 1000));
-    
-    // Step 2: Estimating (Simulation)
-    setConversionStatus('estimating');
-    setProgress(20);
-    await new Promise(r => setTimeout(r, 1500));
-    // Simulate size estimation logic (e.g. 40% of original size for H.264 CRF 23)
-    const estimatedBytes = file.size * 0.4; 
-    setEstimatedSize(formatSize(estimatedBytes));
-    
-    // Step 3: Converting (Simulation)
-    setConversionStatus('converting');
-    for (let i = 20; i <= 100; i += 5) {
-        setProgress(i);
-        // Simulate varying processing time
-        await new Promise(r => setTimeout(r, 300));
-    }
+    try {
+      // Step 1: Upload
+      setConversionStatus('uploading');
+      setProgress(0);
 
-    // Step 4: Completion
-    setConversionStatus('completed');
-    // In a real app, this URL would come from the backend (e.g., http://localhost:8000/download/xyz)
-    // Here we create a fake blob just to show the UX
-    setDownloadUrl('#'); 
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadResponse = await fetch(`${API_BASE_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) throw new Error('Falha no upload. Verifique conexão ou tamanho do arquivo.');
+      
+      const uploadData = await uploadResponse.json();
+      const sessionId = uploadData.session_id;
+      setProgress(100);
+
+      // Step 2: Request Conversion
+      setConversionStatus('converting'); // Skip estimating for now to simplify flow, or add separate endpoint
+      setProgress(0);
+
+      const convertResponse = await fetch(`${API_BASE_URL}/convert/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: uploadData.filename,
+          container: options.container,
+          video_codec: options.videoCodec,
+          audio_codec: options.audioCodec,
+          preset: options.preset,
+          crf: options.crf,
+          remove_audio: options.removeAudio,
+          scale: options.scale !== 'original' ? options.scale : null
+        })
+      });
+
+      if (!convertResponse.ok) {
+        const errData = await convertResponse.json();
+        throw new Error(errData.detail || 'Erro durante a conversão.');
+      }
+
+      const convertData = await convertResponse.json();
+      
+      // In a real WebSocket/SSE setup, we would stream progress here.
+      // For REST, we assume the server waits (blocking) or we poll. 
+      // Assuming the endpoint returns when done for this MVP.
+      setProgress(100);
+      
+      // Step 3: Completion
+      setConversionStatus('completed');
+      
+      // Construct full download URL
+      const dlUrl = convertData.download_url.startsWith('http') 
+        ? convertData.download_url 
+        : `${API_BASE_URL.replace('/api/v1', '')}${convertData.download_url}`;
+        
+      setDownloadUrl(dlUrl);
+
+    } catch (err) {
+      console.error(err);
+      setConversionStatus('error');
+      setErrorMsg(err instanceof Error ? err.message : 'Erro desconhecido');
+    }
   };
 
   const copyToClipboard = () => {
@@ -156,12 +206,13 @@ const App: React.FC = () => {
      setGeneratedCommand('');
      setConversionStatus('idle');
      setDownloadUrl(null);
+     setErrorMsg(null);
   };
 
   return (
     <div className="min-h-screen bg-background text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden flex flex-col">
       
-      {/* Landing View Background - Only visible on landing */}
+      {/* Landing View Background */}
       <AnimatePresence>
         {view === 'landing' && (
           <motion.div
@@ -176,7 +227,7 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* LANDING PAGE HEADER - Only on landing */}
+      {/* LANDING PAGE HEADER */}
       <AnimatePresence>
         {view === 'landing' && (
           <motion.nav 
@@ -186,17 +237,12 @@ const App: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="relative z-20 w-full p-8 flex justify-between items-center max-w-7xl mx-auto"
           >
-            {/* Left Spacer / Invisible Logo to balance layout if needed, or just empty */}
             <div className="w-24"></div>
-
-            {/* Center Links */}
             <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide">
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Ajuda</a>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Blog</a>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Contato</a>
             </div>
-
-            {/* Right Button */}
             <div className="w-24 flex justify-end">
               <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
                 Entrar
@@ -205,7 +251,6 @@ const App: React.FC = () => {
           </motion.nav>
         )}
       </AnimatePresence>
-
 
       {/* Main Content Container */}
       <div className="relative z-10 flex-1 flex flex-col">
@@ -236,12 +281,11 @@ const App: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
               transition={{ duration: 0.8 }}
-              className="flex-1 flex flex-col items-center justify-center p-8 text-center mt-[-80px]" // Negative margin to center vertically accounting for header
+              className="flex-1 flex flex-col items-center justify-center p-8 text-center mt-[-80px]"
             >
               <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-white mb-10 drop-shadow-2xl">
                 Quantizer
               </h1>
-              
               <button
                 onClick={() => setView('converter')}
                 className="group relative px-10 py-4 bg-white text-black font-bold text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)]"
@@ -269,46 +313,65 @@ const App: React.FC = () => {
                      <DropZone onFileSelected={handleFileSelect} />
                   ) : (
                     /* Active Conversion Status Card */
-                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-10 flex flex-col items-center justify-center text-center h-[300px]">
-                        {conversionStatus === 'completed' ? (
+                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-10 flex flex-col items-center justify-center text-center h-[300px] relative overflow-hidden">
+                        {conversionStatus === 'error' && (
+                           <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+                             <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <AlertTriangle size={32} />
+                             </div>
+                             <h3 className="text-xl font-bold text-white">Erro</h3>
+                             <p className="text-red-300 text-sm max-w-[250px] mx-auto">{errorMsg}</p>
+                             <button 
+                               onClick={() => setConversionStatus('idle')}
+                               className="text-sm underline text-gray-400 hover:text-white"
+                             >
+                               Tentar novamente
+                             </button>
+                           </div>
+                        )}
+                        
+                        {conversionStatus === 'completed' && (
                           <div className="space-y-4 animate-in fade-in zoom-in duration-500">
                              <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <CheckCircle2 size={32} />
                              </div>
                              <h3 className="text-xl font-bold text-white">Conversão Concluída!</h3>
-                             <p className="text-gray-400 text-sm">Seu arquivo foi otimizado com sucesso.</p>
+                             <p className="text-gray-400 text-sm">Download pronto.</p>
                              {downloadUrl && (
                                <a 
                                  href={downloadUrl}
+                                 download // Hint to browser
+                                 target="_blank"
+                                 rel="noopener noreferrer"
                                  className="inline-flex items-center gap-2 bg-accent hover:bg-cyan-400 text-black font-bold py-2 px-6 rounded-full mt-4 transition-colors"
-                                 onClick={(e) => { e.preventDefault(); alert("Em um ambiente com API real, o download iniciaria agora."); }}
                                >
                                  <Download size={18} />
-                                 Baixar Arquivo ({estimatedSize})
+                                 Baixar Arquivo
                                </a>
                              )}
                           </div>
-                        ) : (
+                        )}
+                        
+                        {(conversionStatus === 'uploading' || conversionStatus === 'converting' || conversionStatus === 'estimating') && (
                           <div className="w-full max-w-xs space-y-6">
                             <div className="relative w-20 h-20 mx-auto">
                                <div className="absolute inset-0 border-4 border-gray-700 rounded-full"></div>
                                <div className="absolute inset-0 border-4 border-t-accent border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
                             </div>
                             <div>
-                              <h3 className="font-medium text-lg mb-1">Processando...</h3>
+                              <h3 className="font-medium text-lg mb-1">
+                                {conversionStatus === 'uploading' ? 'Enviando...' : 'Processando...'}
+                              </h3>
                               <p className="text-xs text-gray-500 font-mono">{file?.name}</p>
                             </div>
                             <ProgressBar 
                               progress={progress} 
                               status={
-                                conversionStatus === 'uploading' ? 'Enviando ao servidor...' :
-                                conversionStatus === 'estimating' ? 'Calculando tamanho...' :
-                                'Convertendo (FFmpeg)...'
+                                conversionStatus === 'uploading' ? 'Upload ao servidor' :
+                                conversionStatus === 'estimating' ? 'Estimando...' :
+                                'Convertendo (FFmpeg)'
                               } 
                             />
-                            {estimatedSize && (
-                               <p className="text-xs text-gray-400">Tamanho Estimado: <span className="text-white font-mono">{estimatedSize}</span></p>
-                            )}
                           </div>
                         )}
                     </div>
@@ -345,7 +408,6 @@ const App: React.FC = () => {
 
                 {/* RIGHT COLUMN: Configuration */}
                 <div className="lg:col-span-7 space-y-6">
-                  {/* Removing overflow-hidden to allow tooltips to show */}
                   <div className={`bg-surface rounded-xl border border-gray-800 p-6 md:p-8 relative transition-opacity duration-300 ${conversionStatus !== 'idle' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                     {!file && (
                       <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl">
