@@ -75,7 +75,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected }) => {
       className={`
         relative group border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300
         ${isDragging ? 'border-accent bg-accent/5 scale-[1.01]' : error ? 'border-red-500 bg-red-500/5' : 'border-gray-700 hover:border-gray-500 bg-surface/50'}
-      `}
+      `} 
     >
       <input
         type="file"

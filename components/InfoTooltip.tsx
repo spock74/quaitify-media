@@ -9,7 +9,7 @@ interface InfoTooltipProps {
 const InfoTooltip: React.FC<InfoTooltipProps> = ({ text }) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  return (
+  return ( 
     <div className="relative inline-flex items-center ml-2">
       <button
         onClick={() => setIsVisible(!isVisible)}

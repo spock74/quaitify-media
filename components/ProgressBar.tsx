@@ -23,6 +23,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, status }) => {
       </div>
     </div>
   );
-};
+}; 
 
 export default ProgressBar;

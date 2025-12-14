@@ -564,7 +564,7 @@ const App: React.FC = () => {
                 exit={{ scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
                 className="bg-[#1e1e1e] border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden"
-              >
+              > 
                 <div className="p-4 bg-[#252525] border-b border-gray-700 flex justify-between items-center">
                    <div className="flex items-center gap-3">
                       <Terminal size={18} className="text-gray-400" />

@@ -18,11 +18,11 @@ export enum CodecType {
 export enum AudioCodecType {
   AAC = 'aac',
   MP3 = 'libmp3lame',
-  OPUS = 'libopus',
+  OPUS = 'libopus', 
   COPY = 'copy',
   NONE = 'an'
 }
-
+ 
 export enum PresetType {
   ULTRAFAST = 'ultrafast',
   SUPERFAST = 'superfast',

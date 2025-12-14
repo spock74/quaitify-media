@@ -167,7 +167,7 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
            const b = 212;
            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.3 + alpha * 0.7})`;
         }
-        
+         
         ctx.fill();
       });
 

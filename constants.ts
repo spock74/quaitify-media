@@ -19,4 +19,4 @@ export const INITIAL_OPTIONS = {
   scale: 'original',
   fps: 'original',
   removeAudio: false
-};
+}; 
