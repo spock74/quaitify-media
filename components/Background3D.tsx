@@ -21,8 +21,9 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
     let height = window.innerHeight;
 
     // Configuration
-    const particleCount = variant === 'knot' ? 1400 : 600;
-    const baseScale = Math.min(width, height) * (variant === 'knot' ? 0.18 : 0.35);
+    // Increased particle count for knot to create a more solid density
+    const particleCount = variant === 'knot' ? 2600 : 600;
+    const baseScale = Math.min(width, height) * (variant === 'knot' ? 0.22 : 0.35);
     const rotationSpeed = 0.002;
 
     interface Point {
@@ -52,7 +53,8 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
       // Parametric equation for a (p,q) torus knot
       const p = 2;
       const q = 3; 
-      const tubeRadius = 0.6; // Thickness of the cloud around the curve
+      // Decreased radius significantly (0.6 -> 0.25) to condense the shape into a "solid" tube
+      const tubeRadius = 0.25; 
       
       for (let i = 0; i < particleCount; i++) {
         // t represents the angle along the curve
@@ -137,14 +139,16 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
 
         // Draw particle
         const alpha = (z + baseScale * 2) / (3 * baseScale); 
-        const size = Math.max(0.5, scale * (variant === 'knot' ? 2 : 2.5));
+        // Slightly reduced max size for knot to accommodate higher density
+        const size = Math.max(0.5, scale * (variant === 'knot' ? 1.8 : 2.5));
 
         ctx.beginPath();
         ctx.arc(x2D, y2D, size, 0, Math.PI * 2);
         
         if (variant === 'knot' && point.baseColor) {
            // Use pre-calculated hue, modify alpha based on depth
-           const cleanAlpha = Math.max(0.1, Math.min(1, 0.3 + alpha * 0.7));
+           // Increased base opacity slightly for solid feel
+           const cleanAlpha = Math.max(0.15, Math.min(1, 0.4 + alpha * 0.6));
            ctx.fillStyle = `${point.baseColor} ${cleanAlpha})`;
         } else {
            // Default Sphere Colors (Cyan/Teal)
