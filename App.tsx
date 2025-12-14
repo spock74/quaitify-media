@@ -90,6 +90,11 @@ const App: React.FC = () => {
       parts.push('-vf', `scale=${options.scale}`);
     }
 
+    // FPS (Frame Rate)
+    if (options.fps !== 'original') {
+      parts.push('-r', options.fps);
+    }
+
     // Audio
     if (options.removeAudio) {
       parts.push('-an');
@@ -153,7 +158,8 @@ const App: React.FC = () => {
           preset: options.preset,
           crf: options.crf,
           remove_audio: options.removeAudio,
-          scale: options.scale !== 'original' ? options.scale : null
+          scale: options.scale !== 'original' ? options.scale : null,
+          fps: options.fps !== 'original' ? options.fps : null
         })
       });
 
@@ -486,6 +492,44 @@ const App: React.FC = () => {
                           value={options.crf}
                           onChange={(e) => setOptions({...options, crf: parseInt(e.target.value)})}
                         />
+                      </div>
+
+                      {/* FPS Control */}
+                      <div className="space-y-2">
+                        <label className="text-xs text-gray-500 font-mono uppercase flex justify-between items-center">
+                          <span className="flex items-center">FPS (Quadros) <InfoTooltip text={TOOLTIPS.fps} /></span>
+                        </label>
+                        
+                        <div className="bg-background border border-gray-700 rounded-lg p-3 flex flex-col gap-3">
+                           <label className="flex items-center gap-2 cursor-pointer">
+                              <input 
+                                type="checkbox"
+                                checked={options.fps === 'original'}
+                                onChange={(e) => setOptions({...options, fps: e.target.checked ? 'original' : '30'})}
+                                className="w-4 h-4 text-accent rounded border-gray-600 focus:ring-accent bg-transparent"
+                              />
+                              <span className="text-sm text-gray-300">Manter Original</span>
+                           </label>
+                           
+                           {options.fps !== 'original' && (
+                              <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="flex items-center gap-3"
+                              >
+                                <input 
+                                  type="range" 
+                                  min="1" 
+                                  max="120" 
+                                  step="1"
+                                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-white"
+                                  value={options.fps}
+                                  onChange={(e) => setOptions({...options, fps: e.target.value})}
+                                />
+                                <span className="text-accent font-mono w-8 text-right">{options.fps}</span>
+                              </motion.div>
+                           )}
+                        </div>
                       </div>
 
                        {/* Audio Codec */}
