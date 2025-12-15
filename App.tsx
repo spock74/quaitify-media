@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle, Play, Download, HardDrive, AlertTriangle } from 'lucide-react';
+import { FileCode, Settings, Terminal, CheckCircle2, Copy, RefreshCw, AlertCircle, Play, Download, HardDrive, AlertTriangle, Menu } from 'lucide-react';
 import Background3D, { AnimationVariant } from './components/Background3D';
 import DropZone from './components/DropZone';
 import InfoTooltip from './components/InfoTooltip';
@@ -254,16 +254,20 @@ const App: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative z-20 w-full p-6 md:p-8 flex justify-between items-center max-w-7xl mx-auto"
+            className="relative z-20 w-full p-4 md:p-8 flex justify-between items-center max-w-7xl mx-auto"
           >
-            <div className="w-12 md:w-24"></div>
+            <div className="w-8 md:w-24"></div>
             <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide">
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Ajuda</a>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Blog</a>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">Contato</a>
             </div>
-            <div className="w-12 md:w-24 flex justify-end">
-              <button className="bg-white text-black px-4 py-1.5 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-bold hover:bg-gray-200 transition-colors">
+            {/* Mobile Menu Icon Fallback (Static for now) */}
+            <div className="md:hidden text-white">
+               <Menu size={24} />
+            </div>
+            <div className="hidden md:flex w-24 justify-end">
+              <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors">
                 Entrar
               </button>
             </div>
@@ -272,20 +276,20 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Content Container */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto">
+      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
         
         {/* Converter Header */}
         {view === 'converter' && (
           <motion.header 
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-full p-4 md:p-6 border-b border-gray-800 bg-background/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-40"
+            className="w-full p-4 border-b border-gray-800 bg-background/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-40 h-16"
           >
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setView('landing'); resetApp(); }}>
+            <div className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity" onClick={() => { setView('landing'); resetApp(); }}>
               <div className="w-8 h-8 rounded bg-white text-black flex items-center justify-center">
                  <RefreshCw size={18} />
               </div>
-              <span className="font-bold text-xl tracking-tight text-white">Quantizer</span>
+              <span className="font-bold text-lg md:text-xl tracking-tight text-white">Quantizer</span>
             </div>
           </motion.header>
         )}
@@ -300,19 +304,22 @@ const App: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
               transition={{ duration: 0.8 }}
-              className="flex-1 flex flex-col items-center justify-center p-8 text-center mt-[-60px] md:mt-[-80px]"
+              className="flex-1 flex flex-col items-center justify-between p-6 pb-20 pt-10 text-center"
             >
-              <h1 className="text-5xl md:text-8xl font-bold tracking-tight text-white mb-8 md:mb-10 drop-shadow-2xl">
+              <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tight text-white drop-shadow-2xl leading-tight select-none">
                 Quantizer
               </h1>
-              <button
-                onClick={() => setView('converter')}
-                className="group relative px-8 py-3 md:px-10 md:py-4 bg-white text-black font-bold text-base md:text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)]"
-              >
-                <span className="relative z-10">
-                  Quantificar Arquivo
-                </span>
-              </button>
+              
+              <div className="w-full flex justify-center">
+                <button
+                  onClick={() => setView('converter')}
+                  className="group relative px-8 py-4 md:px-16 md:py-4 bg-white text-black font-bold text-base md:text-lg rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_50px_-15px_rgba(255,255,255,0.4)] w-full max-w-xs md:w-auto"
+                >
+                  <span className="relative z-10">
+                    Quantificar
+                  </span>
+                </button>
+              </div>
             </motion.div>
           )}
 
@@ -322,18 +329,17 @@ const App: React.FC = () => {
               key="converter"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              // Ajuste de altura e centralização vertical: min-h para preencher a tela menos o header
-              className="flex-1 container mx-auto max-w-5xl p-4 md:p-8 flex flex-col justify-center min-h-[calc(100vh-80px)]"
+              className="flex-1 container mx-auto max-w-5xl p-4 md:p-8 flex flex-col justify-start md:justify-center min-h-[calc(100vh-64px)] pb-12"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 w-full">
                 
                 {/* LEFT COLUMN: Input & Info */}
-                <div className="lg:col-span-5 space-y-4 md:space-y-6">
+                <div className="lg:col-span-5 space-y-4">
                   {conversionStatus === 'idle' ? (
                      <DropZone onFileSelected={handleFileSelect} />
                   ) : (
                     /* Active Conversion Status Card */
-                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center h-[250px] md:h-[300px] relative overflow-hidden">
+                    <div className="bg-surface/50 border border-gray-700 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center text-center h-[220px] md:h-[300px] relative overflow-hidden">
                         {conversionStatus === 'error' && (
                            <div className="space-y-4 animate-in fade-in zoom-in duration-300">
                              <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -343,7 +349,7 @@ const App: React.FC = () => {
                              <p className="text-red-300 text-sm max-w-[250px] mx-auto">{errorMsg}</p>
                              <button 
                                onClick={() => setConversionStatus('idle')}
-                               className="text-sm underline text-gray-400 hover:text-white"
+                               className="text-sm underline text-gray-400 hover:text-white p-2"
                              >
                                Tentar novamente
                              </button>
@@ -352,18 +358,18 @@ const App: React.FC = () => {
                         
                         {conversionStatus === 'completed' && (
                           <div className="space-y-4 animate-in fade-in zoom-in duration-500">
-                             <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                             <div className="w-14 h-14 md:w-16 md:h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <CheckCircle2 size={32} />
                              </div>
-                             <h3 className="text-xl font-bold text-white">Conversão Concluída!</h3>
+                             <h3 className="text-lg md:text-xl font-bold text-white">Concluído!</h3>
                              <p className="text-gray-400 text-sm">Download pronto.</p>
                              {downloadUrl && (
                                <a 
                                  href={downloadUrl}
-                                 download // Hint to browser
+                                 download 
                                  target="_blank"
                                  rel="noopener noreferrer"
-                                 className="inline-flex items-center gap-2 bg-accent hover:bg-cyan-400 text-black font-bold py-2 px-6 rounded-full mt-4 transition-colors"
+                                 className="inline-flex items-center gap-2 bg-accent hover:bg-cyan-400 text-black font-bold py-3 px-6 rounded-full mt-2 transition-colors text-sm md:text-base w-full justify-center md:w-auto"
                                >
                                  <Download size={18} />
                                  Baixar Arquivo
@@ -387,9 +393,9 @@ const App: React.FC = () => {
                             <ProgressBar 
                               progress={progress} 
                               status={
-                                conversionStatus === 'uploading' ? 'Upload ao servidor' :
+                                conversionStatus === 'uploading' ? 'Upload' :
                                 conversionStatus === 'estimating' ? 'Estimando...' :
-                                'Convertendo (FFmpeg)'
+                                'Convertendo'
                               } 
                             />
                           </div>
@@ -427,36 +433,33 @@ const App: React.FC = () => {
                 </div>
 
                 {/* RIGHT COLUMN: Configuration */}
-                <div className="lg:col-span-7 space-y-6">
-                  <div className={`bg-surface rounded-xl border border-gray-800 p-5 md:p-8 relative transition-opacity duration-300 ${conversionStatus !== 'idle' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                <div className="lg:col-span-7 space-y-4 md:space-y-6">
+                  <div className={`bg-surface rounded-xl border border-gray-800 p-4 md:p-8 relative transition-opacity duration-300 ${conversionStatus !== 'idle' ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
                     {!file && (
                       <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-xl p-4 text-center">
-                        <p className="text-gray-500 font-mono text-sm">Importe um arquivo para configurar as opções</p>
+                        <p className="text-gray-500 font-mono text-sm px-6">Importe um arquivo para configurar as opções</p>
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-3 mb-6 md:mb-8">
-                      <Settings className="text-white" size={24} />
-                      <h2 className="text-lg md:text-xl font-semibold">Matriz de Conversão</h2>
+                    <div className="flex items-center gap-3 mb-6">
+                      <Settings className="text-white" size={20} />
+                      <h2 className="text-lg font-semibold">Configuração</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                       
                       {/* Container */}
                       <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Formato de Destino <InfoTooltip text={TOOLTIPS.container} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Formato <InfoTooltip text={TOOLTIPS.container} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none transition-all"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-base md:text-sm focus:border-white focus:ring-1 focus:ring-white outline-none transition-all h-12 md:h-10"
                           value={options.container}
                           onChange={(e) => {
                             const newContainer = e.target.value;
                             const updates: Partial<ConversionOptions> = { container: newContainer };
-                            
-                            // Prevent AudioCodec.NONE if switching to MP3
                             if (newContainer === 'mp3' && options.audioCodec === AudioCodecType.NONE) {
                               updates.audioCodec = AudioCodecType.MP3;
                             }
-                            
                             setOptions({...options, ...updates});
                           }}
                         >
@@ -464,17 +467,17 @@ const App: React.FC = () => {
                           <option value="mov">MOV (macOS)</option>
                           <option value="mkv">MKV (Moderno)</option>
                           <option value="webm">WebM (Web)</option>
-                          <option value="mp3">MP3 (Apenas Áudio)</option>
+                          <option value="mp3">MP3 (Áudio)</option>
                         </select>
                       </div>
 
                       {/* Video Codec */}
                       <div className="space-y-2">
                         <label className={`text-xs text-gray-500 font-mono uppercase ${options.container === 'mp3' ? 'opacity-50' : ''}`}>
-                           Codec de Vídeo <InfoTooltip text={TOOLTIPS.videoCodec} />
+                           Vídeo Codec <InfoTooltip text={TOOLTIPS.videoCodec} />
                         </label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-base md:text-sm focus:border-white focus:ring-1 focus:ring-white outline-none disabled:opacity-30 disabled:cursor-not-allowed h-12 md:h-10"
                           value={options.videoCodec}
                           disabled={options.container === 'mp3'}
                           onChange={(e) => setOptions({...options, videoCodec: e.target.value as CodecType})}
@@ -483,7 +486,7 @@ const App: React.FC = () => {
                           <option value={CodecType.H265}>H.265 (HEVC)</option>
                           <option value={CodecType.PRORES}>ProRes</option>
                           <option value={CodecType.VP9}>VP9</option>
-                          <option value={CodecType.COPY}>Copiar (Sem Recodificação)</option>
+                          <option value={CodecType.COPY}>Copiar (Rápido)</option>
                         </select>
                       </div>
 
@@ -491,15 +494,15 @@ const App: React.FC = () => {
                        <div className="space-y-2">
                         <label className="text-xs text-gray-500 font-mono uppercase">Velocidade <InfoTooltip text={TOOLTIPS.preset} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-base md:text-sm focus:border-white focus:ring-1 focus:ring-white outline-none h-12 md:h-10"
                           value={options.preset}
                           onChange={(e) => setOptions({...options, preset: e.target.value as PresetType})}
                         >
-                          <option value={PresetType.ULTRAFAST}>Ultrafast (Baixa Qualidade)</option>
-                          <option value={PresetType.FAST}>Fast (Rápido)</option>
-                          <option value={PresetType.MEDIUM}>Medium (Balanceado)</option>
-                          <option value={PresetType.SLOW}>Slow (Alta Qualidade)</option>
-                          <option value={PresetType.VERYSLOW}>Very Slow (Melhor Tamanho)</option>
+                          <option value={PresetType.ULTRAFAST}>Ultrafast</option>
+                          <option value={PresetType.FAST}>Fast</option>
+                          <option value={PresetType.MEDIUM}>Medium</option>
+                          <option value={PresetType.SLOW}>Slow</option>
+                          <option value={PresetType.VERYSLOW}>Very Slow</option>
                         </select>
                       </div>
 
@@ -509,14 +512,16 @@ const App: React.FC = () => {
                           <span>Qualidade (CRF) <InfoTooltip text={TOOLTIPS.crf} /></span>
                           <span className="text-accent">{options.crf}</span>
                         </label>
-                        <input 
-                          type="range" 
-                          min="0" 
-                          max="51" 
-                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-white"
-                          value={options.crf}
-                          onChange={(e) => setOptions({...options, crf: parseInt(e.target.value)})}
-                        />
+                        <div className="h-12 md:h-10 flex items-center bg-background border border-gray-700 rounded-lg px-3">
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="51" 
+                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-white"
+                            value={options.crf}
+                            onChange={(e) => setOptions({...options, crf: parseInt(e.target.value)})}
+                          />
+                        </div>
                       </div>
 
                       {/* FPS Control */}
@@ -525,22 +530,22 @@ const App: React.FC = () => {
                           <span className="flex items-center">FPS <InfoTooltip text={TOOLTIPS.fps} /></span>
                         </label>
                         
-                        <div className={`bg-background border border-gray-700 rounded-lg p-3 flex flex-col gap-3 ${options.container === 'mp3' ? 'opacity-30 pointer-events-none' : ''}`}>
-                           <label className="flex items-center gap-2 cursor-pointer">
+                        <div className={`bg-background border border-gray-700 rounded-lg p-3 flex flex-col justify-center h-16 md:h-auto gap-2 ${options.container === 'mp3' ? 'opacity-30 pointer-events-none' : ''}`}>
+                           <label className="flex items-center gap-3 cursor-pointer">
                               <input 
                                 type="checkbox"
                                 checked={options.fps === 'original'}
                                 onChange={(e) => setOptions({...options, fps: e.target.checked ? 'original' : '30'})}
-                                className="w-4 h-4 text-accent rounded border-gray-600 focus:ring-accent bg-transparent"
+                                className="w-5 h-5 text-accent rounded border-gray-600 focus:ring-accent bg-transparent"
                               />
-                              <span className="text-sm text-gray-300">Original</span>
+                              <span className="text-sm text-gray-300">Manter Original</span>
                            </label>
                            
                            {options.fps !== 'original' && (
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="flex items-center gap-3"
+                                className="flex items-center gap-3 pt-1"
                               >
                                 <input 
                                   type="range" 
@@ -559,29 +564,29 @@ const App: React.FC = () => {
 
                        {/* Audio Codec */}
                        <div className="space-y-2">
-                        <label className="text-xs text-gray-500 font-mono uppercase">Codec de Áudio <InfoTooltip text={TOOLTIPS.audioCodec} /></label>
+                        <label className="text-xs text-gray-500 font-mono uppercase">Áudio Codec <InfoTooltip text={TOOLTIPS.audioCodec} /></label>
                         <select 
-                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-sm focus:border-white focus:ring-1 focus:ring-white outline-none"
+                          className="w-full bg-background border border-gray-700 rounded-lg p-3 text-base md:text-sm focus:border-white focus:ring-1 focus:ring-white outline-none h-12 md:h-10"
                           value={options.audioCodec}
                           onChange={(e) => setOptions({...options, audioCodec: e.target.value as AudioCodecType})}
                         >
                           <option value={AudioCodecType.AAC}>AAC</option>
                           <option value={AudioCodecType.MP3}>MP3</option>
-                          <option value={AudioCodecType.COPY}>Copiar Original</option>
+                          <option value={AudioCodecType.COPY}>Copiar</option>
                           <option value={AudioCodecType.NONE} disabled={options.container === 'mp3'}>
-                             {options.container === 'mp3' ? 'Nenhum' : 'Nenhum (Remover Áudio)'}
+                             {options.container === 'mp3' ? 'Nenhum' : 'Nenhum (Remover)'}
                           </option>
                         </select>
                       </div>
 
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-gray-800 flex flex-col md:flex-row gap-4">
+                    <div className="mt-8 pt-6 border-t border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-4">
                       
                       <button 
                         onClick={generateScript}
                         disabled={!file}
-                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full"
+                        className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-4 md:py-3 px-4 rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full touch-manipulation"
                       >
                          <FileCode size={20} className="text-gray-400" />
                          <span>Gerar Script</span>
@@ -590,7 +595,7 @@ const App: React.FC = () => {
                       <button 
                         onClick={handleRealConversion}
                         disabled={!file}
-                        className="flex-1 bg-white hover:bg-gray-200 text-black font-bold py-3 px-6 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full"
+                        className="bg-white hover:bg-gray-200 text-black font-bold py-4 md:py-3 px-6 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full touch-manipulation"
                       >
                          <HardDrive size={20} />
                          <span>Processar (API)</span>
@@ -612,42 +617,43 @@ const App: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/80 backdrop-blur-sm"
               onClick={() => setShowScript(false)}
             >
               <motion.div 
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#1e1e1e] border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                className="bg-[#1e1e1e] border-t md:border border-gray-700 w-full md:max-w-2xl rounded-t-2xl md:rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[90vh]"
               > 
                 <div className="p-4 bg-[#252525] border-b border-gray-700 flex justify-between items-center shrink-0">
                    <div className="flex items-center gap-3">
                       <Terminal size={18} className="text-gray-400" />
                       <span className="font-mono text-sm font-medium">Comando do Terminal</span>
                    </div>
-                   <button onClick={() => setShowScript(false)} className="text-gray-500 hover:text-white">&times;</button>
+                   <button onClick={() => setShowScript(false)} className="text-gray-500 hover:text-white p-2">&times;</button>
                 </div>
 
-                <div className="p-6 overflow-y-auto">
+                <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar">
                    <div className="flex items-start gap-3 mb-6 p-4 bg-blue-900/20 border border-blue-900/50 rounded-lg">
                       <AlertCircle className="text-blue-400 shrink-0 mt-0.5" size={18} />
                       <div className="text-sm text-blue-200">
                         <p className="mb-2"><strong>Modo Wrapper Quantizer:</strong></p>
-                        <p>A conversão direta no navegador é limitada. Copie o comando abaixo e cole-o no seu Terminal para executar a conversão com desempenho total do sistema.</p>
+                        <p>Copie e cole no seu Terminal.</p>
                       </div>
                    </div>
 
                    <div className="relative group">
-                     <pre className="bg-black p-6 rounded-lg font-mono text-sm text-green-400 overflow-x-auto whitespace-pre-wrap break-all border border-gray-800">
+                     <pre className="bg-black p-4 md:p-6 pr-12 rounded-lg font-mono text-xs md:text-sm text-green-400 overflow-x-auto whitespace-pre-wrap break-all border border-gray-800">
                        {generatedCommand}
                      </pre>
                      <button 
                         onClick={copyToClipboard}
-                        className="absolute top-2 right-2 p-2 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-colors"
+                        className="absolute top-2 right-2 p-3 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-colors"
                       >
-                        {copied ? <CheckCircle2 size={16} className="text-green-500" /> : <Copy size={16} />}
+                        {copied ? <CheckCircle2 size={18} className="text-green-500" /> : <Copy size={18} />}
                      </button>
                    </div>
                 </div>

@@ -72,9 +72,10 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected }) => {
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
+      onClick={() => document.getElementById('file-upload')?.click()}
       className={`
-        relative group border-2 border-dashed rounded-2xl p-6 md:p-10 text-center transition-all duration-300
-        ${isDragging ? 'border-accent bg-accent/5 scale-[1.01]' : error ? 'border-red-500 bg-red-500/5' : 'border-gray-700 hover:border-gray-500 bg-surface/50'}
+        relative group border-2 border-dashed rounded-2xl p-4 md:p-10 text-center transition-all duration-300 cursor-pointer
+        ${isDragging ? 'border-accent bg-accent/5 scale-[1.01]' : error ? 'border-red-500 bg-red-500/5' : 'border-gray-700 hover:border-gray-500 bg-surface/50 active:bg-surface/80'}
       `} 
     >
       <input
@@ -85,30 +86,26 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected }) => {
         accept="video/*,image/*,.mov,.mkv,.mp4,.avi,.webm"
       />
       
-      <div className="flex flex-col items-center justify-center space-y-4">
-        <div className={`p-4 rounded-full bg-surface border transition-colors ${
+      <div className="flex flex-col items-center justify-center space-y-3 md:space-y-4">
+        <div className={`p-3 md:p-4 rounded-full bg-surface border transition-colors ${
           error ? 'border-red-500 text-red-500' : 
           isDragging ? 'border-accent text-accent' : 
-          'border-gray-700 text-gray-400'
+          'border-gray-700 text-gray-400 group-hover:text-white'
         }`}>
-           {error ? <AlertCircle size={32} /> : (isDragging ? <FileVideo size={32} /> : <UploadCloud size={32} />)}
+           {error ? <AlertCircle size={28} className="md:w-8 md:h-8" /> : (isDragging ? <FileVideo size={28} className="md:w-8 md:h-8" /> : <UploadCloud size={28} className="md:w-8 md:h-8" />)}
         </div>
         <div>
-          <h3 className={`text-lg font-medium mb-1 ${error ? 'text-red-400' : 'text-white'}`}>
-            {error ? 'Erro no Arquivo' : 'Arraste e Solte o Arquivo'}
+          <h3 className={`text-base md:text-lg font-medium mb-1 ${error ? 'text-red-400' : 'text-white'}`}>
+            {error ? 'Erro no Arquivo' : 'Selecione o Arquivo'}
           </h3>
-          <p className={`text-sm mb-4 ${error ? 'text-red-300/70' : 'text-gray-500'}`}>
+          <p className={`text-sm ${error ? 'text-red-300/70' : 'text-gray-500'}`}>
             {error || (
               <>
-                ou <label htmlFor="file-upload" className="text-accent hover:text-cyan-300 cursor-pointer font-medium hover:underline">navegue pelos arquivos</label> no seu Mac
+                <span className="md:hidden">Toque para buscar na galeria</span>
+                <span className="hidden md:inline">Arraste e solte ou <span className="text-accent hover:underline">navegue</span></span>
               </>
             )}
           </p>
-          {!error && (
-            <p className="text-xs text-gray-600 hidden md:block">
-              Suporta .MOV, .MP4, .MKV, .AVI e mais
-            </p>
-          )}
         </div>
       </div>
     </div>

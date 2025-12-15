@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, X, Info } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface InfoTooltipProps {
@@ -7,43 +7,75 @@ interface InfoTooltipProps {
 }
 
 const InfoTooltip: React.FC<InfoTooltipProps> = ({ text }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  return ( 
-    <div className="relative inline-flex items-center ml-2 group">
+  return (
+    <>
+      {/* Trigger Button */}
       <button
-        onClick={(e) => { e.preventDefault(); setIsVisible(!isVisible); }}
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-        className="text-gray-500 hover:text-accent transition-colors focus:outline-none"
+        onClick={(e) => { 
+          e.preventDefault(); 
+          setIsOpen(true); 
+        }}
+        className="ml-2 text-gray-500 hover:text-accent transition-colors focus:outline-none inline-flex items-center justify-center"
         aria-label="More info"
         type="button"
       >
         <HelpCircle size={14} />
       </button>
 
+      {/* Modal Overlay */}
       <AnimatePresence>
-        {isVisible && (
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -5, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -5, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className={`
-              absolute top-full mt-3 z-50 p-4 bg-surface border border-gray-700 rounded-lg shadow-2xl text-xs text-gray-300 leading-relaxed whitespace-pre-line
-              w-64 max-w-[85vw]
-              left-1/2 -translate-x-1/2
-              md:w-96 md:left-0 md:-translate-x-4
-            `}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
           >
-            {/* Seta do Tooltip (Apontando para cima) */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 md:left-5 md:translate-x-0 -mb-[1px] border-4 border-transparent border-b-gray-700" />
-            
-            {text}
+            {/* Modal Content Card */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-[#171717] border border-gray-700 w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[80vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-surface/50 rounded-t-xl">
+                <div className="flex items-center gap-2 text-accent">
+                  <Info size={18} />
+                  <h3 className="font-semibold text-sm uppercase tracking-wide">Detalhes da Opção</h3>
+                </div>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-500 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-800"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body (Scrollable) */}
+              <div className="p-5 overflow-y-auto custom-scrollbar text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                {text}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-800 bg-surface/30 rounded-b-xl flex justify-end">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg transition-colors"
+                >
+                  Entendi
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 };
 

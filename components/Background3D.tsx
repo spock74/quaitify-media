@@ -28,7 +28,8 @@ const Background3D: React.FC<Background3DProps> = ({ variant = 'sphere' }) => {
     // Controla o tamanho do objeto em relação à tela.
     // Aumente para aproximar (zoom in), diminua para afastar.
     // Valor sugerido Knot: 0.22, Sphere: 0.35
-    const CAMERA_ZOOM = variant === 'knot' ? 0.22 : 0.35;
+    // Ajustado para afastar a camera conforme solicitado (0.14 para Knot, 0.25 para Sphere)
+    const CAMERA_ZOOM = variant === 'knot' ? 0.14 : 0.25;
 
     // [DENSIDADE DE PARTICULAS]
     // Controla quantas partículas formam o objeto.
